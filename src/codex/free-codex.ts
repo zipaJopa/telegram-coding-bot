@@ -60,7 +60,6 @@ class Thread {
         '--message', prompt
       ], {
         cwd: this.workingDirectory,
-        shell: true,
       });
 
       let buffer = '';

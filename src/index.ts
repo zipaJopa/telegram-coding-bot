@@ -49,9 +49,12 @@ async function main() {
     console.error('Bot error:', error);
   });
 
-  // Start bot
+  // Start bot with explicit polling configuration
   try {
-    await bot.launch();
+    await bot.launch({
+      dropPendingUpdates: true,
+      allowedUpdates: []
+    });
     console.log('✅ Codex Telegram Bot is running!');
     console.log('Press Ctrl+C to stop');
   } catch (error) {
