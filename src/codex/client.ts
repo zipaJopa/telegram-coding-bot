@@ -3,9 +3,11 @@
  *
  * Provides abstraction layer for Codex SDK with thread management
  * Handles thread creation, resumption, and streaming
+ *
+ * USING FREE DROP-IN REPLACEMENT (OpenRouter + Aider)
  */
 
-import { Codex } from '@openai/codex-sdk';
+import { Codex } from './free-codex.js';
 import { ThreadOptions, ThreadInfo } from './types.js';
 
 // Singleton Codex instance

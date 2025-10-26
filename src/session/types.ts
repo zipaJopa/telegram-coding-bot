@@ -2,13 +2,10 @@
  * Session types for per-user conversation management
  */
 
-import { AgentType } from '../agents/types.js';
-
 export interface UserSession {
   user_id: number;
   cwd: string;
   thread_id?: string;
-  agent?: AgentType | 'auto';
   created_at: string;
   last_updated: string;
 }

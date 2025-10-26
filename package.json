@@ -2,12 +2,12 @@
   "name": "codex-telegram-bot",
   "version": "1.0.0",
   "type": "module",
-  "description": "Telegram bot with autonomous coding via free CLI agents (Gemini, QwenCode, Aider)",
+  "description": "Telegram coding bot with FREE OpenRouter + Aider (drop-in Codex SDK replacement)",
   "main": "dist/index.js",
   "scripts": {
     "setup-auth": "tsx scripts/setup-auth.ts",
     "setup-config": "tsx scripts/setup-config.ts",
-    "validate": "tsx scripts/validate-config.ts",
+    "validate": "tsx validate-fixes.ts",
     "create-bot": "tsx scripts/create-bot.ts",
     "dev": "tsx src/index.ts",
     "build": "tsc",
@@ -19,13 +19,19 @@
     "test:permissions": "TEST_MODE=permissions tsx test-codex.ts",
     "test:conversation": "TEST_MODE=conversation tsx test-codex.ts",
     "test:error": "TEST_MODE=error tsx test-codex.ts",
-    "test:resume-simple": "npx tsx test-resume-simple.ts",
-    "validate": "tsx validate-fixes.ts"
+    "test:resume-simple": "npx tsx test-resume-simple.ts"
   },
-  "keywords": ["telegram", "bot", "codex", "ai", "typescript"],
+  "keywords": [
+    "telegram",
+    "bot",
+    "codex",
+    "ai",
+    "typescript"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@openai/codex-sdk": "^0.50.0",
     "dotenv": "^17.2.3",
     "telegraf": "^4.16.3",
     "tsx": "^4.20.6"
