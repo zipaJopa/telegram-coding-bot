@@ -52,8 +52,8 @@ class Thread {
       yield { type: 'turn.started' };
 
       // Use Aider with OpenRouter free model (Qwen3-Coder - best free coding model)
-      const aiderPath = process.env.HOME ? `${process.env.HOME}/.local/bin/aider` : 'aider';
-      const aider = spawn(aiderPath, [
+      const aider = spawn('python3', [
+        '-m', 'aider',
         '--yes-always',
         '--no-git',
         '--model', 'openrouter/qwen/qwen3-coder:free',
