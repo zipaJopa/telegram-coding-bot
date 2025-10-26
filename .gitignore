@@ -15,6 +15,13 @@ telegram_sessions/
 # Workspace (user projects)
 workspace/
 
+# CLI agent credentials (OAuth)
+.gemini/
+.qwen/
+
+# Agent quota tracking
+data/
+
 # TypeScript cache
 *.tsbuildinfo
 

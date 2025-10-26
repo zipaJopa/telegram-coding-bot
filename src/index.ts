@@ -12,6 +12,7 @@ import { setcwdCommand } from './bot/commands/setcwd.js';
 import { getcwdCommand } from './bot/commands/getcwd.js';
 import { searchcwdCommand } from './bot/commands/searchcwd.js';
 import { resetCommand } from './bot/commands/reset.js';
+import { agentCommand } from './bot/commands/agent.js';
 import { handleMessage } from './bot/handlers/message.js';
 
 /**
@@ -36,6 +37,7 @@ async function main() {
   // Register command handlers
   bot.command('start', startCommand);
   bot.command('help', helpCommand);
+  bot.command('agent', agentCommand);
   bot.command('setcwd', setcwdCommand);
   bot.command('getcwd', getcwdCommand);
   bot.command('searchcwd', searchcwdCommand);

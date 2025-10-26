@@ -7,15 +7,8 @@
 
 import { Context } from 'telegraf';
 import { getOrCreateSession, saveUserSession } from '../../session/manager.js';
-import { getOrCreateThread, runStreaming } from '../../codex/client.js';
-import {
-  processItemCompleted,
-  isItemCompleted,
-  isTurnCompleted,
-  formatError,
-} from '../../codex/events.js';
+import { runWithAgent } from '../../agents/router.js';
 import { sendLongMessage } from '../utils/message-splitter.js';
-import { sendRecentScreenshots } from '../utils/screenshot-handler.js';
 
 /**
  * Handle incoming text messages from users
@@ -45,51 +38,20 @@ export async function handleMessage(ctx: Context): Promise<void> {
     // 1. Load or create session
     const session = getOrCreateSession(userId);
     const cwd = session.cwd;
+    const agentType = session.agent || 'auto';
 
-    console.log(`Processing message from user ${userId} in ${cwd}`);
+    console.log(`Processing message from user ${userId} in ${cwd} with ${agentType} agent`);
 
-    // 2. Get or create thread (synchronous operation)
-    let thread;
-    try {
-      thread = getOrCreateThread(session.thread_id, cwd);
-      console.log(`Thread obtained: ${thread.id || 'new thread (ID assigned on first turn)'}`);
-    } catch (error) {
-      console.error('Error getting thread:', error);
-      await ctx.reply(formatError(error));
-      return;
-    }
-
-    // 3. Track conversation start time (for screenshot filtering)
-    const conversationStartTime = new Date();
-
-    // 4. Send typing indicator
+    // 2. Send typing indicator
     await ctx.sendChatAction('typing');
 
-    // 5. Stream Codex response
-    // NOTE: Global rules are now in AGENTS.md in the working directory
-    // No need to enhance the prompt - just pass user message directly
-    console.log(`Running streamed prompt on thread ${thread.id}`);
-
-    let result;
-    try {
-      console.log("Running stream")
-      result = await runStreaming(thread, messageText);
-    } catch (error) {
-      console.error('Error running streaming:', error);
-      await ctx.reply(formatError(error));
-      return;
-    }
-
-    // 6. Process streaming events
-    const { events } = result;
-    console.log(events)
-
     let lastTypingUpdate = Date.now();
-    const typingInterval = 5000; // Send typing indicator every 5 seconds
+    const typingInterval = 5000;
 
     try {
-      for await (const event of events) {
-        console.log(event)
+      // 3. Stream agent response
+      for await (const event of runWithAgent(agentType, messageText, cwd)) {
+        console.log('[Agent Event]', event);
 
         // Update typing indicator periodically
         const now = Date.now();
@@ -98,83 +60,42 @@ export async function handleMessage(ctx: Context): Promise<void> {
           lastTypingUpdate = now;
         }
 
-        // Handle error events
+        // Handle different event types
         if (event.type === 'error') {
-          console.error('Stream error event:', event.message);
-
-          // Don't send MCP timeout errors to Telegram (they're optional)
-          // Only send actual errors that affect functionality
-          if (!event.message.includes('MCP client')) {
-            await ctx.reply(`⚠️ Error: ${event.message}`);
-          }
-          // Continue processing - don't break the stream
+          console.error('Agent error:', event.message);
+          await ctx.reply(`⚠️ ${event.message}`);
           continue;
         }
 
-        // Handle turn failed events
         if (event.type === 'turn.failed') {
-          console.error('Turn failed:', event.error.message);
-          await ctx.reply(`❌ Turn failed: ${event.error.message}\n\nTry again or use /reset to start fresh.`);
-          // Break - turn has failed
+          console.error('Turn failed:', event.error?.message);
+          await ctx.reply(`❌ ${event.error?.message || 'Task failed'}\n\nTry again or use /reset`);
           break;
         }
 
-        // Handle item completed events
-        if (isItemCompleted(event)) {
-          const processed = processItemCompleted(event);
-
-          if (processed) {
-            switch (processed.type) {
-              case 'text':
-                // Send agent message
-                await sendLongMessage(ctx, processed.content);
-                break;
-
-              case 'tool':
-                // Send tool usage notification
-                await ctx.reply(processed.content);
-                break;
-
-              case 'thinking':
-                // Optionally send thinking (currently skipped)
-                // await ctx.reply(processed.content);
-                break;
-            }
-          }
+        if (event.type === 'text' && event.content) {
+          await sendLongMessage(ctx, event.content);
         }
 
-        // Handle turn completed event
-        if (isTurnCompleted(event)) {
-          console.log('Turn completed, checking for screenshots');
-
-          // Send screenshots
-          await sendRecentScreenshots(ctx, cwd, conversationStartTime);
-
-          // Save updated session with thread_id
-          session.thread_id = thread.id;
+        if (event.type === 'turn.completed') {
+          console.log('Turn completed successfully');
+          // Save session
           session.last_updated = new Date().toISOString();
           saveUserSession(userId, session);
-
-          console.log(`Session saved for user ${userId} with thread ${thread.id}`);
-
-          // IMPORTANT: Break out of event loop - turn is complete!
-          // Without this, the loop waits for stream to end (which causes 90s timeout)
           break;
         }
       }
-    } catch (error) {
-      console.error('Error processing events:', error);
+    } catch (error: any) {
+      console.error('Error processing agent:', error);
       await ctx.reply(
-        formatError(error) +
-        '\n\nThe conversation may have been interrupted. You can try again or use /reset to start fresh.'
+        `❌ Error: ${error.message}\n\nTry again or use /reset if the issue persists.`
       );
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in message handler:', error);
     await ctx.reply(
-      formatError(error) +
-      '\n\nSomething went wrong. Please try again or use /reset if the issue persists.'
+      `❌ Something went wrong: ${error.message}\n\nPlease try again or use /reset`
     );
   }
 }
