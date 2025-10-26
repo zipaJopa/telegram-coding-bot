@@ -52,9 +52,9 @@ class Thread {
       yield { type: 'turn.started' };
 
       // Use Aider with OpenRouter free model (Qwen3-Coder - best free coding model)
-      // Use /usr/bin/env to find python3 in PATH
-      const aider = spawn('/usr/bin/env', [
-        'python3', '-m', 'aider',
+      // Use direct python3 path - works on both Linux and WSL
+      const aider = spawn('/bin/python3', [
+        '-m', 'aider',
         '--yes-always',
         '--no-git',
         '--model', 'openrouter/qwen/qwen3-coder:free',
