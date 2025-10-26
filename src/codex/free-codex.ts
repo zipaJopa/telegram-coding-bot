@@ -52,12 +52,9 @@ class Thread {
       yield { type: 'turn.started' };
 
       // Use Aider with OpenRouter free model (Qwen3-Coder - best free coding model)
-      // Use full path to python3 from uv
-      const python = process.env.HOME ?
-        `${process.env.HOME}/.local/share/uv/python/cpython-3.11.11-linux-x86_64-gnu/bin/python3` :
-        'python3';
-      const aider = spawn(python, [
-        '-m', 'aider',
+      // Use /usr/bin/env to find python3 in PATH
+      const aider = spawn('/usr/bin/env', [
+        'python3', '-m', 'aider',
         '--yes-always',
         '--no-git',
         '--model', 'openrouter/qwen/qwen3-coder:free',
