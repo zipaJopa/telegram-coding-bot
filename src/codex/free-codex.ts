@@ -52,8 +52,8 @@ class Thread {
       yield { type: 'turn.started' };
 
       // Use Aider with OpenRouter free model (Qwen3-Coder - best free coding model)
-      // Use direct python3 path - works on both Linux and WSL
-      const aider = spawn('/bin/python3', [
+      // Use python3.11 directly and set PATH explicitly for Node.js spawn
+      const aider = spawn('/bin/python3.11', [
         '-m', 'aider',
         '--yes-always',
         '--no-git',
@@ -62,6 +62,7 @@ class Thread {
         '--message', prompt
       ], {
         cwd: this.workingDirectory,
+        env: { ...process.env, PATH: '/usr/local/bin:/usr/bin:/bin:/root/.local/bin' },
       });
 
       let buffer = '';
