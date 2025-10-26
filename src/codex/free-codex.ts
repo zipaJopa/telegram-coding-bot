@@ -51,11 +51,11 @@ class Thread {
     try {
       yield { type: 'turn.started' };
 
-      // Use Aider with OpenRouter free model (DeepSeek R1 - best free coding model)
+      // Use Aider with OpenRouter free model (Qwen3-Coder - best free coding model)
       const aider = spawn('aider', [
         '--yes-always',
         '--no-git',
-        '--model', 'openrouter/deepseek/deepseek-r1:free',
+        '--model', 'openrouter/qwen/qwen3-coder:free',
         '--openrouter-api-key', this.openrouterKey,
         '--message', prompt
       ], {
